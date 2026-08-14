@@ -1,0 +1,882 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#3559e0">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<title>My Vocabulary v5.2</title>
+<style>
+:root{
+  --bg:#f5f7fb;--panel:#fff;--text:#1d2433;--muted:#697386;--line:#e5e7eb;
+  --accent:#3559e0;--accent-soft:#eef2ff;--good:#137a4c;--warn:#966800;--bad:#b42318;
+  --shadow:0 12px 34px rgba(31,41,55,.08);--radius:18px
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans JP",sans-serif}
+button,input,select,textarea{font:inherit}
+button{touch-action:manipulation}
+.app{max-width:1160px;margin:auto;padding:16px;padding-bottom:max(24px,env(safe-area-inset-bottom))}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:14px}
+h1{font-size:24px;margin:0}.sub,.help{font-size:12px;color:var(--muted);line-height:1.55}
+.tabs{display:flex;gap:7px;flex-wrap:wrap}
+.tab,.btn{border:1px solid var(--line);background:#fff;color:var(--text);border-radius:12px;padding:9px 13px;cursor:pointer}
+.tab.active,.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.good{background:#ecfdf3;color:var(--good);border-color:#b7e4ca}.btn.bad{color:var(--bad)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.panel{display:none}.panel.active{display:block}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:17px;box-shadow:var(--shadow)}
+.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:14px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px}
+.stat strong{display:block;font-size:21px}.stat span{font-size:12px;color:var(--muted)}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px}
+input,textarea,select{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--text)}
+textarea{min-height:74px;resize:vertical}
+input:focus,textarea:focus,select:focus{outline:2px solid #b9c6ff;outline-offset:1px}
+.actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.lookup-row{display:grid;grid-template-columns:1fr auto;gap:7px;align-items:end}
+.status{font-size:12px;margin-top:6px;min-height:17px}.ok{color:var(--good)}.err{color:var(--bad)}.warn{color:var(--warn)}
+.badge{display:inline-block;padding:3px 8px;border-radius:999px;background:var(--accent-soft);font-size:11px;color:#4054ad;margin:2px}
+.readingbar{display:grid;grid-template-columns:1.6fr 1fr .7fr auto;gap:8px;align-items:end;margin-bottom:14px}
+.readingbar .box{grid-column:1/-1;box-shadow:none;padding:12px}
+.quick-note{background:#fbfcff;border:1px dashed #cdd5ee;border-radius:12px;padding:10px;margin-top:9px}
+.sensebox{display:none;margin-top:9px;padding:11px;border:1px solid var(--line);border-radius:12px;background:#fafbff}
+.sense-preview{margin-top:7px;font-size:13px;line-height:1.55}
+.duplicate{display:none;border:1px solid #f2d59a;background:#fff9ec;border-radius:12px;padding:10px;margin-top:9px}
+.inline-choice{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.study-wrap{max-width:800px;margin:auto}
+.progress{height:7px;background:#e8ebf2;border-radius:999px;overflow:hidden;margin:10px 0}
+.progress>div{height:100%;background:var(--accent);width:0}
+.card{min-height:420px;perspective:1000px;cursor:pointer}
+.inner{width:100%;min-height:420px;position:relative;transition:transform .38s;transform-style:preserve-3d}
+.card.flipped .inner{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;background:#fff;border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:28px;overflow:auto}
+.back{transform:rotateY(180deg)}
+.word{font-size:38px;font-weight:760}.cloze{font-size:22px;line-height:1.55;max-width:680px}.cloze .blank{display:inline-block;min-width:90px;border-bottom:2px solid var(--accent);color:transparent}
+.pos{margin-top:7px;font-size:14px;color:var(--muted)}
+.meaning{font-size:24px;font-weight:700}.definition{font-size:14px;color:var(--muted);line-height:1.5;margin-top:7px}
+.example{font-size:17px;line-height:1.55;margin:13px 0 4px}.context{font-size:16px;line-height:1.6;margin:13px 0;padding:10px;background:#f8f9fd;border-radius:12px;width:100%}
+.memo{background:var(--accent-soft);border-radius:11px;padding:9px 12px;margin-top:11px;max-width:100%}
+.rating{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:10px}
+.rating button{padding:11px 6px;border:1px solid var(--line);background:#fff;border-radius:12px;cursor:pointer}.rating small{display:block;color:var(--muted);margin-top:3px}
+.fsrsline{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:12px;margin-top:9px}
+.toolbar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:11px}.toolbar input{flex:1;min-width:220px}
+table{width:100%;border-collapse:collapse}th,td{text-align:left;padding:9px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:top}th{font-weight:600;color:var(--muted)}
+.empty{text-align:center;color:var(--muted);padding:34px 8px}
+.bulklist{margin-top:10px;display:grid;gap:7px;max-height:430px;overflow:auto}
+.bulkitem{border:1px solid var(--line);border-radius:11px;padding:10px;background:#fff}
+.bulkitem .top{display:flex;justify-content:space-between;gap:10px}.bulkitem .jp{font-weight:650;margin-top:4px}
+.needs-ja{border-color:#f0c879;background:#fffaf0}
+.install{display:none}
+.kbd{font-size:11px;border:1px solid var(--line);background:#f7f8fa;padding:2px 5px;border-radius:5px}
+details{border-top:1px solid var(--line);margin-top:12px;padding-top:10px}
+summary{cursor:pointer;font-weight:650}
+footer{margin:20px 0 4px;text-align:center;font-size:11px;color:var(--muted)}
+@media(max-width:800px){
+ header{display:block}.tabs{margin-top:11px}.grid,.row,.readingbar{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}
+ .card,.inner{min-height:460px}.word{font-size:33px}.cloze{font-size:20px}.rating{grid-template-columns:1fr 1fr}
+ th:nth-child(3),td:nth-child(3),th:nth-child(5),td:nth-child(5){display:none}
+ .readingbar .box{grid-column:auto}
+}
+
+/* Invite-only gate: app is never visible until cloud-sync authorizes the user. */
+body.invite-locked .app{display:none!important}
+body.invite-unlocked #inviteGate{display:none!important}
+#inviteGate{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;
+  padding:24px;background:var(--bg)
+}
+.invite-card{
+  width:min(480px,100%);background:#fff;border:1px solid var(--line);
+  border-radius:24px;padding:26px;box-shadow:var(--shadow)
+}
+.invite-logo{
+  width:54px;height:54px;border-radius:16px;background:var(--accent);
+  color:#fff;display:grid;place-items:center;font-size:28px;margin-bottom:16px
+}
+.invite-card h1{font-size:26px;margin:0 0 8px}
+.invite-card .privacy{
+  background:var(--accent-soft);padding:10px 12px;border-radius:12px;
+  font-size:12px;color:#4054ad;margin:14px 0
+}
+
+
+/* Offline Test Mode: only locally stored study cards are available. */
+#offlineBanner{
+  display:none;margin:0 0 12px;padding:10px 14px;border-radius:13px;
+  background:#fff8e8;border:1px solid #f1d28b;color:#7a5600;
+  font-size:13px;line-height:1.5
+}
+body.offline-study-mode #offlineBanner{display:block}
+body.offline-study-mode .tabs .tab:not([data-tab="study"]){display:none!important}
+body.offline-study-mode #quick,
+body.offline-study-mode #bulk,
+body.offline-study-mode #list,
+body.offline-study-mode #settings{display:none!important}
+body.offline-study-mode #speakStudy{display:none!important}
+.offline-ready{
+  background:#ecfdf3;border:1px solid #b7e4ca;border-radius:12px;
+  padding:10px 12px;margin-top:9px
+}
+
+</style>
+</head>
+<body class="invite-locked">
+
+<div id="inviteGate">
+  <div class="invite-card">
+    <div class="invite-logo">📖</div>
+    <h1>My Vocabulary</h1>
+    <p class="sub">Invite-only vocabulary app</p>
+
+    <div id="inviteConfigError" class="status"></div>
+
+    <div id="inviteLoginArea">
+      <p>このアプリは<strong>招待されたユーザー専用</strong>です。</p>
+      <label>招待されたメールアドレス</label>
+      <input id="inviteEmail" type="email" autocomplete="email" placeholder="you@example.com">
+      <button class="btn primary" id="inviteLoginBtn" style="width:100%;margin-top:10px">
+        ログインリンクを送信
+      </button>
+      <div id="inviteMessage" class="status"></div>
+      <div class="privacy">
+        未登録のメールアドレスから新しいアカウントを作成することはできません。
+      </div>
+    </div>
+
+    <div id="inviteChecking" style="display:none">
+      <p>アクセス権を確認しています…</p>
+    </div>
+
+    <div id="inviteDenied" style="display:none">
+      <h2 style="font-size:19px">アクセス権がありません</h2>
+      <p class="help">
+        このアカウントはログイン済みですが、現在の許可ユーザー一覧に登録されていません。
+      </p>
+      <button class="btn" id="inviteDeniedLogout">ログアウト</button>
+    </div>
+  </div>
+</div>
+
+<div class="app">
+<div id="offlineBanner">
+  <b>オフライン単語テスト</b> — 辞書検索・クラウド通信は停止中です。
+  回答とFSRS履歴はこの端末に保存され、次回オンライン時に同期されます。
+</div>
+<header>
+  <div>
+    <h1>My Vocabulary <span class="badge">v5.2 · Offline Test</span></h1>
+    <div class="sub">読む → すぐ登録 → 文脈で復習。LLMトークン 0。</div>
+  </div>
+  <nav class="tabs">
+    <button class="tab active" data-tab="quick">高速登録</button>
+    <button class="tab" data-tab="study">復習</button>
+    <button class="tab" data-tab="bulk">一括登録</button>
+    <button class="tab" data-tab="list">一覧</button>
+    <button class="tab" data-tab="settings">設定</button>
+  </nav>
+</header>
+
+<section class="panel active" id="quick">
+  <div class="readingbar">
+    <div><label>読んでいる本 / 論文</label><input id="readingSource" placeholder="e.g. Molecular Biology of the Cell"></div>
+    <div><label>Chapter / Section</label><input id="readingChapter" placeholder="Chapter 4"></div>
+    <div><label>Page</label><input id="readingPage" placeholder="142"></div>
+    <button class="btn" id="clearReading">クリア</button>
+    <div class="box">
+      <div class="help"><b>読書モード</b>：ここで指定した出典は、新しいカードに自動で付きます。設定はブラウザに保持します。</div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="box">
+      <h2 style="margin-top:0">高速登録</h2>
+      <form id="cardForm">
+        <input type="hidden" id="editId">
+        <div class="lookup-row">
+          <div>
+            <label>単語 / フレーズ *</label>
+            <input id="wordInput" required autocomplete="off" autocapitalize="off" placeholder="elusive">
+          </div>
+          <button type="button" class="btn primary" id="dictionaryLookup">辞書検索</button>
+        </div>
+        <div class="status" id="lookupStatus"></div>
+
+        <label>本で出てきた文脈</label>
+        <textarea id="contextInput" placeholder="The precise molecular mechanism remains elusive."></textarea>
+        <div class="help">文脈があるカードは、復習時に自動で穴埋め（Cloze）になります。</div>
+
+        <div class="duplicate" id="duplicateBox">
+          <b>すでに登録済みです</b>
+          <div class="help" id="duplicateInfo"></div>
+          <div class="inline-choice" style="margin-top:7px">
+            <label style="margin:0"><input type="radio" name="dupAction" value="merge" checked style="width:auto"> 既存カードに今回の文脈を追加</label>
+            <label style="margin:0"><input type="radio" name="dupAction" value="new" style="width:auto"> 別カードとして保存</label>
+          </div>
+        </div>
+
+        <div class="sensebox" id="senseBox">
+          <label>語義候補</label>
+          <select id="senseSelect"></select>
+          <div class="sense-preview" id="sensePreview"></div>
+        </div>
+
+        <div class="row">
+          <div><label>品詞</label><input id="posInput"></div>
+          <div class="lookup-row">
+            <div><label>IPA</label><input id="pronInput"></div>
+            <button type="button" class="btn" id="speakWord" title="発音">🔊</button>
+          </div>
+        </div>
+
+        <label>日本語の意味 *</label>
+        <textarea id="meaningInput" required></textarea>
+
+        <label>英語定義</label>
+        <textarea id="definitionInput"></textarea>
+
+        <label>例文</label>
+        <textarea id="exampleInput"></textarea>
+
+        <div class="row">
+          <div><label>タグ</label><input id="tagsInput" placeholder="academic, biology"></div>
+          <div><label>ページ（このカードのみ変更）</label><input id="pageInput"></div>
+        </div>
+
+        <label>メモ / 類義語</label>
+        <textarea id="memoInput"></textarea>
+
+        <div class="actions">
+          <button class="btn primary" type="submit">保存して次へ</button>
+          <button class="btn" type="button" id="saveNoLookup">辞書なしで保存</button>
+          <button class="btn" type="button" id="cancelEdit" style="display:none">編集終了</button>
+        </div>
+        <div class="help" style="margin-top:8px">
+          <span class="kbd">Enter</span> 辞書検索　
+          <span class="kbd">⌘/Ctrl + Enter</span> 保存　
+          <span class="kbd">Alt + P</span> 発音
+        </div>
+      </form>
+    </div>
+
+    <div class="box">
+      <h2 style="margin-top:0">自動化</h2>
+      <p class="help">辞書検索すると、品詞・IPA・日本語訳候補・英語定義・例文・類義語を自動入力します。</p>
+      <div class="quick-note">
+        <b>自分の和訳を学習</b>
+        <div class="help">あなたが修正して保存した日本語訳は、同じ語義を次に検索したとき最優先で使われます。</div>
+      </div>
+      <div class="quick-note">
+        <b>重複を自動検出</b>
+        <div class="help">同じ単語を再登録すると、既存カードへの文脈追加か、別語義として新規保存かを選べます。</div>
+      </div>
+      <div class="quick-note">
+        <b>共有から追加</b>
+        <div class="help">PWAとしてインストールできる環境では、他アプリの共有先としてこのアプリを使える場合があります。共有された短い語は単語欄、長い文章は文脈欄に入ります。</div>
+      </div>
+      <button class="btn primary install" id="installBtn">アプリとしてインストール</button>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="study">
+  <div class="stats">
+    <div class="stat"><strong id="statTotal">0</strong><span>総カード</span></div>
+    <div class="stat"><strong id="statDue">0</strong><span>今すぐ復習</span></div>
+    <div class="stat"><strong id="statNew">0</strong><span>未学習</span></div>
+    <div class="stat"><strong id="statMature">0</strong><span>安定度 ≥ 21日</span></div>
+  </div>
+  <div class="study-wrap">
+    <div class="box" style="margin-bottom:11px">
+      <div class="row">
+        <div>
+          <label>対象</label>
+          <select id="studyMode">
+            <option value="due">Due + 新規</option><option value="dueOnly">Dueのみ</option>
+            <option value="new">新規のみ</option><option value="all">全カード</option>
+          </select>
+        </div>
+        <div><label>タグ</label><select id="studyTag"><option value="">すべて</option></select></div>
+      </div>
+      <div class="progress"><div id="studyProgress"></div></div>
+      <div class="fsrsline"><span id="studyCounter">0 / 0</span><span id="fsrsStatus">FSRS loading...</span></div>
+    </div>
+    <div id="studyEmpty" class="box empty" style="display:none">対象カードがありません。</div>
+    <div id="studyArea">
+      <div class="card" id="flashCard">
+        <div class="inner">
+          <div class="face front">
+            <div class="cloze" id="cardPrompt">—</div>
+            <div class="pos" id="cardPromptMeta"></div>
+            <div class="sub" style="margin-top:22px">タップして答えを見る</div>
+          </div>
+          <div class="face back">
+            <div class="word" id="cardWord">—</div>
+            <div class="pos" id="cardPos"></div>
+            <button class="btn" id="speakStudy" style="margin-top:8px">🔊 発音</button>
+            <div class="meaning" id="cardMeaning" style="margin-top:13px">—</div>
+            <div class="definition" id="cardDefinition"></div>
+            <div class="context" id="cardContext" style="display:none"></div>
+            <div class="example" id="cardExample"></div>
+            <div class="memo" id="cardMemo" style="display:none"></div>
+            <div id="cardTags" style="margin-top:8px"></div>
+          </div>
+        </div>
+      </div>
+      <div class="rating">
+        <button data-rating="1"><b>Again</b><small id="ivAgain">—</small></button>
+        <button data-rating="2"><b>Hard</b><small id="ivHard">—</small></button>
+        <button data-rating="3"><b>Good</b><small id="ivGood">—</small></button>
+        <button data-rating="4"><b>Easy</b><small id="ivEasy">—</small></button>
+      </div>
+      <div class="fsrsline"><span id="cardMemory"></span><span id="cardDue"></span></div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="bulk">
+  <div class="grid">
+    <div class="box">
+      <h2 style="margin-top:0">一括登録</h2>
+      <p class="help">1行1語。文脈も入れる場合は <code>単語 | 文脈</code> の形式にしてください。</p>
+      <textarea id="bulkInput" style="min-height:250px" placeholder="elusive | The precise mechanism remains elusive.
+pertinent
+account for | These interactions may account for the observed selectivity."></textarea>
+      <div class="actions">
+        <button class="btn primary" id="bulkLookup">辞書を一括検索</button>
+        <button class="btn good" id="bulkSave" disabled>候補を一括保存</button>
+      </div>
+      <div class="status" id="bulkStatus"></div>
+    </div>
+    <div class="box">
+      <h2 style="margin-top:0">候補</h2>
+      <div class="bulklist" id="bulkList"><div class="empty">まだ候補がありません。</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="panel" id="list">
+  <div class="box">
+    <div class="toolbar">
+      <input id="searchInput" placeholder="単語・意味・文脈・出典・タグを検索">
+      <select id="filterTag"><option value="">すべてのタグ</option></select>
+      <select id="filterBook"><option value="">すべての本/論文</option></select>
+    </div>
+    <div style="overflow:auto">
+      <table>
+        <thead><tr><th>単語</th><th>意味</th><th>出典/文脈</th><th>FSRS</th><th>次回</th><th></th></tr></thead>
+        <tbody id="cardTable"></tbody>
+      </table>
+    </div>
+    <div class="empty" id="listEmpty" style="display:none">カードがありません。</div>
+  </div>
+</section>
+
+<section class="panel" id="settings">
+  <div class="grid">
+    <div class="box">
+      <h2 style="margin-top:0">復習設定</h2>
+      <label>出題形式</label>
+      <select id="promptMode">
+        <option value="cloze">文脈があればCloze、なければ単語</option>
+        <option value="word">常に単語 → 意味</option>
+        <option value="mixed">Cloze / 単語をランダム</option>
+      </select>
+      <div style="height:10px"></div>
+      <label>Desired retention: <b id="retentionValue">90%</b></label>
+      <input type="range" id="retentionRange" min="80" max="97" step="1" value="90">
+      <p class="help">FSRSの目標保持率。高いほど復習頻度が増えます。</p>
+      <div class="help" id="fsrsLibInfo">ts-fsrs を読み込み中…</div>
+    </div>
+    <div class="box">
+      <h2 style="margin-top:0">バックアップ / 移行</h2>
+      <div class="actions">
+        <button class="btn primary" id="exportJson">JSONバックアップ</button>
+        <label class="btn">JSON読み込み<input type="file" id="importJson" accept=".json" style="display:none"></label>
+        <button class="btn" id="exportCsv">CSV書き出し</button>
+        <button class="btn" id="importV3">v3データを探す</button>
+        <button class="btn bad" id="deleteAll">全削除</button>
+      </div>
+      <details>
+        <summary>自分用和訳辞書</summary>
+        <p class="help"><span id="personalDictCount">0</span> 語義を保存中。</p>
+        <button class="btn bad" id="clearPersonalDict">自分用和訳辞書を消去</button>
+      </details>
+    </div>
+  </div>
+</section>
+
+<footer>
+  Dictionary: FreeDictionaryAPI.com / Wiktionary (CC BY-SA 4.0) · FSRS: ts-fsrs
+</footer>
+</div>
+
+<script type="module">
+let FSRS=null,scheduler=null,deferredInstall=null;
+const KEY="myVocabularyCards_v4";
+const SETTINGS_KEY="myVocabularySettings_v4";
+const DICT_CACHE_KEY="myVocabularyDictionaryCache_v4";
+const PERSONAL_DICT_KEY="myVocabularyPersonalTranslations_v4";
+const READING_KEY="myVocabularyReadingSession_v4";
+let settings=safeParse(localStorage.getItem(SETTINGS_KEY),{retention:.90,promptMode:"cloze"});
+let cards=safeParse(localStorage.getItem(KEY),[]);
+let dictCache=safeParse(localStorage.getItem(DICT_CACHE_KEY),{});
+let personalDict=safeParse(localStorage.getItem(PERSONAL_DICT_KEY),{});
+let reading=safeParse(localStorage.getItem(READING_KEY),{source:"",chapter:"",page:""});
+let currentSenses=[],currentSenseKey="",queue=[],qIndex=0,bulkPending=[];
+
+const $=id=>document.getElementById(id);
+function safeParse(s,f){try{return s?JSON.parse(s):f}catch{return f}}
+function esc(s=""){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
+function uid(){return crypto.randomUUID?crypto.randomUUID():Date.now()+"_"+Math.random()}
+function tagsFrom(s){return[...new Set(String(s).split(",").map(x=>x.trim()).filter(Boolean))]}
+function parseTags(c){return Array.isArray(c.tags)?c.tags:tagsFrom(c.tags||"")}
+function norm(s){return String(s||"").trim().toLowerCase().replace(/\s+/g," ")}
+function download(blob,name){const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
+function saveCards(){localStorage.setItem(KEY,JSON.stringify(cards));window.dispatchEvent(new CustomEvent("vocab-data-changed"));refreshAll()}
+function persistSettings(){localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings))}
+function persistCache(){try{localStorage.setItem(DICT_CACHE_KEY,JSON.stringify(dictCache))}catch(e){console.warn(e)}}
+function persistPersonal(){localStorage.setItem(PERSONAL_DICT_KEY,JSON.stringify(personalDict));$("personalDictCount").textContent=Object.keys(personalDict).length}
+function persistReading(){
+  reading={source:$("readingSource").value.trim(),chapter:$("readingChapter").value.trim(),page:$("readingPage").value.trim()};
+  localStorage.setItem(READING_KEY,JSON.stringify(reading));
+}
+function dueTime(c){return c.fsrs?.due?new Date(c.fsrs.due).getTime():0}
+function isNew(c){return !c.fsrs||(c.fsrs.state===0&&(c.fsrs.reps||0)===0)}
+function isDue(c){return isNew(c)||dueTime(c)<=Date.now()}
+function fmtDue(x){if(!x)return"未学習";return new Date(x).toLocaleString("ja-JP",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})}
+function humanInterval(ms){
+  if(ms<60000)return"<1分";const min=Math.round(ms/60000);if(min<60)return`${min}分`;
+  const hr=Math.round(ms/3600000);if(hr<36)return`${hr}時間`;
+  const d=Math.round(ms/86400000);if(d<60)return`${d}日`;
+  if(d<730)return`${Math.round(d/30.44)}か月`;return`${(d/365.25).toFixed(1)}年`;
+}
+function sourceLabel(c){return[c.source,c.chapter,c.page?`p.${c.page}`:""].filter(Boolean).join(" · ")}
+function senseKey(word,pos,definition){return`${norm(word)}|${norm(pos)}|${norm(definition)}`}
+function flattenSenses(senses,out=[]){for(const s of senses||[]){out.push(s);if(s.subsenses?.length)flattenSenses(s.subsenses,out)}return out}
+function japaneseTranslations(sense){
+  return[...new Set((sense.translations||[]).filter(t=>{
+    const code=norm(t.language?.code),name=norm(t.language?.name);return code==="ja"||code==="jpn"||name==="japanese";
+  }).map(t=>t.word).filter(Boolean))];
+}
+function bestIPA(entry){
+  const p=(entry.pronunciations||[]).find(x=>norm(x.type)==="ipa"&&x.text)||(entry.pronunciations||[]).find(x=>x.text);
+  return p?.text||"";
+}
+function templateExample(word,pos){
+  const p=norm(pos);
+  if(p.includes("adjective"))return`The finding remained ${word} despite further analysis.`;
+  if(p.includes("adverb"))return`The authors described the result ${word}.`;
+  if(p.includes("verb"))return`The researchers attempted to ${word} the observation.`;
+  if(p.includes("noun"))return`The study examined the role of ${word} in this process.`;
+  return`The term "${word}" appears in the text discussed in this study.`;
+}
+function makeTags(entry,sense){
+  const tags=["dictionary"];const p=norm(entry.partOfSpeech);if(p)tags.push(p);
+  for(const t of sense.tags||[]){const n=norm(t);if(["formal","informal","technical","scientific","academic"].includes(n))tags.push(n)}
+  return[...new Set(tags)];
+}
+function speak(text){
+  if(!("speechSynthesis" in window))return alert("このブラウザは音声読み上げに対応していません。");
+  speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="en-US";u.rate=.88;speechSynthesis.speak(u);
+}
+function clozeText(context,word){
+  if(!context)return"";
+  const escaped=word.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+  try{
+    const re=new RegExp(`\\b${escaped}\\b`,"i");
+    if(re.test(context))return context.replace(re,"_____");
+  }catch{}
+  const i=norm(context).indexOf(norm(word));
+  if(i>=0)return context.slice(0,i)+"_____"+context.slice(i+word.length);
+  return context;
+}
+async function dictionaryData(raw){
+  const key=norm(raw);if(dictCache[key])return dictCache[key];
+  const url=`https://freedictionaryapi.com/api/v1/entries/en/${encodeURIComponent(raw)}?translations=true`;
+  const r=await fetch(url,{headers:{"Accept":"application/json"}});
+  if(!r.ok)throw new Error(r.status===404?"辞書に見つかりませんでした。":`辞書APIエラー (${r.status})`);
+  const data=await r.json();dictCache[key]=data;persistCache();return data;
+}
+function buildCandidates(data){
+  const arr=[];
+  for(const entry of data.entries||[])for(const sense of flattenSenses(entry.senses||[]))if(sense.definition)arr.push({entry,sense});
+  return arr;
+}
+function candidateToFields(word,x){
+  const {entry,sense}=x,key=senseKey(word,entry.partOfSpeech,sense.definition);
+  const personal=personalDict[key];
+  const ja=personal?[personal]:japaneseTranslations(sense);
+  const synonyms=[...(sense.synonyms||[]),...(entry.synonyms||[])].filter(Boolean);
+  return{
+    word,partOfSpeech:entry.partOfSpeech||"",pronunciation:bestIPA(entry),
+    meaning:ja.join("、"),definition:sense.definition||"",
+    example:(sense.examples||[]).find(Boolean)||templateExample(word,entry.partOfSpeech),
+    tags:makeTags(entry,sense),memo:synonyms.length?`類義語: ${[...new Set(synonyms)].slice(0,8).join(", ")}`:"",
+    senseKey:key,needsJa:ja.length===0
+  };
+}
+function existingMatches(word){return cards.filter(c=>norm(c.word)===norm(word))}
+
+async function initFSRS(){
+  try{
+    FSRS=await import("https://cdn.jsdelivr.net/npm/ts-fsrs@5.4.1/+esm");resetScheduler();
+    $("fsrsStatus").textContent="FSRS ready";$("fsrsLibInfo").textContent="Open Spaced Repetition / ts-fsrs 5.4.1 を使用中";
+  }catch(e){
+    console.error(e);$("fsrsStatus").textContent="FSRS読込失敗";
+    $("fsrsLibInfo").textContent="FSRSを読み込めません。オンライン時に「オフラインテストを準備」を一度実行してください。";
+  }buildQueue();
+}
+function resetScheduler(){
+  if(!FSRS)return;scheduler=FSRS.fsrs({
+    request_retention:settings.retention,maximum_interval:36500,enable_fuzz:true,enable_short_term:true,
+    learning_steps:["1m","10m"],relearning_steps:["10m"]
+  });
+}
+function freshFSRSCard(){return FSRS.createEmptyCard(new Date())}
+function hydrateFSRS(o){if(!o)return freshFSRSCard();return{...o,due:new Date(o.due),last_review:o.last_review?new Date(o.last_review):undefined}}
+function serializeFSRS(o){return{...o,due:new Date(o.due).toISOString(),last_review:o.last_review?new Date(o.last_review).toISOString():null}}
+
+document.querySelectorAll(".tab").forEach(b=>b.onclick=()=>{
+  document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+  document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active");$(b.dataset.tab).classList.add("active");
+  if(b.dataset.tab==="study")buildQueue();
+});
+
+$("readingSource").value=reading.source||"";$("readingChapter").value=reading.chapter||"";$("readingPage").value=reading.page||"";
+["readingSource","readingChapter","readingPage"].forEach(id=>$(id).addEventListener("input",persistReading));
+$("clearReading").onclick=()=>{$("readingSource").value="";$("readingChapter").value="";$("readingPage").value="";persistReading()};
+
+function checkDuplicate(){
+  const matches=existingMatches($("wordInput").value);
+  if(matches.length){
+    $("duplicateBox").style.display="block";
+    $("duplicateInfo").textContent=`${matches.length}枚あります：`+matches.slice(0,3).map(c=>`${c.meaning}${c.source?` (${c.source})`:""}`).join(" / ");
+  }else $("duplicateBox").style.display="none";
+}
+$("wordInput").addEventListener("input",checkDuplicate);
+
+$("dictionaryLookup").onclick=lookupCurrent;
+async function lookupCurrent(){
+  const raw=$("wordInput").value.trim();if(!raw){$("lookupStatus").innerHTML='<span class="err">単語を入力してください。</span>';return}
+  $("dictionaryLookup").disabled=true;$("lookupStatus").textContent="辞書を検索中…";$("senseBox").style.display="none";
+  try{
+    const data=await dictionaryData(raw);currentSenses=buildCandidates(data);if(!currentSenses.length)throw new Error("利用できる語義がありません。");
+    $("senseSelect").innerHTML=currentSenses.map((x,i)=>{
+      const f=candidateToFields(raw,x);return`<option value="${i}">${esc((`${f.partOfSpeech} — ${f.meaning||f.definition}`).slice(0,120))}</option>`;
+    }).join("");
+    $("senseBox").style.display=currentSenses.length>1?"block":"none";
+    applySense(0);$("lookupStatus").innerHTML='<span class="ok">✓ 辞書補完しました。⌘/Ctrl + Enter で保存できます。</span>';
+  }catch(e){$("lookupStatus").innerHTML=`<span class="err">${esc(e.message)}</span>`}
+  finally{$("dictionaryLookup").disabled=false;checkDuplicate()}
+}
+$("senseSelect").onchange=e=>applySense(Number(e.target.value));
+function applySense(i){
+  const raw=$("wordInput").value.trim(),x=currentSenses[i];if(!x)return;
+  const f=candidateToFields(raw,x);currentSenseKey=f.senseKey;
+  $("posInput").value=f.partOfSpeech;$("pronInput").value=f.pronunciation;$("meaningInput").value=f.meaning;
+  $("definitionInput").value=f.definition;$("exampleInput").value=f.example;$("tagsInput").value=f.tags.join(", ");$("memoInput").value=f.memo;
+  $("sensePreview").innerHTML=`<b>${esc(f.partOfSpeech)}</b> ${esc(f.pronunciation)}<br><b>日本語:</b> ${f.meaning?esc(f.meaning):'<span class="warn">未登録：保存前に入力推奨</span>'}<br><b>Definition:</b> ${esc(f.definition)}`;
+}
+$("speakWord").onclick=()=>speak($("wordInput").value.trim());
+
+function currentFields(){
+  persistReading();
+  return{
+    word:$("wordInput").value.trim(),partOfSpeech:$("posInput").value.trim(),pronunciation:$("pronInput").value.trim(),
+    meaning:$("meaningInput").value.trim(),definition:$("definitionInput").value.trim(),example:$("exampleInput").value.trim(),
+    context:$("contextInput").value.trim(),source:reading.source,chapter:reading.chapter,page:$("pageInput").value.trim()||reading.page,
+    tags:tagsFrom($("tagsInput").value),memo:$("memoInput").value.trim(),senseKey:currentSenseKey
+  };
+}
+function resetQuick(){
+  const keepPage=reading.page;
+  $("cardForm").reset();$("editId").value="";$("cancelEdit").style.display="none";$("lookupStatus").textContent="";
+  $("senseBox").style.display="none";$("duplicateBox").style.display="none";currentSenses=[];currentSenseKey="";
+  $("pageInput").value=keepPage;$("wordInput").focus();
+}
+function learnTranslation(f){
+  if(f.meaning&&f.senseKey){personalDict[f.senseKey]=f.meaning;persistPersonal()}
+}
+function mergeIntoExisting(existing,f){
+  existing.contexts=Array.isArray(existing.contexts)?existing.contexts:[];
+  if(existing.context)existing.contexts.push({text:existing.context,source:existing.source||"",chapter:existing.chapter||"",page:existing.page||""});
+  if(f.context)existing.contexts.push({text:f.context,source:f.source,chapter:f.chapter,page:f.page});
+  existing.context=f.context||existing.context||"";
+  existing.source=f.source||existing.source||"";existing.chapter=f.chapter||existing.chapter||"";existing.page=f.page||existing.page||"";
+  existing.updatedAt=new Date().toISOString();
+}
+$("cardForm").onsubmit=e=>{e.preventDefault();saveCurrent()};
+$("saveNoLookup").onclick=()=>saveCurrent();
+function saveCurrent(){
+  const f=currentFields();if(!f.word)return alert("単語を入力してください。");if(!f.meaning)return alert("日本語の意味を入力してください。");
+  learnTranslation(f);
+  const id=$("editId").value;
+  if(id){
+    const i=cards.findIndex(c=>c.id===id);cards[i]={...cards[i],...f,updatedAt:new Date().toISOString()};
+  }else{
+    const matches=existingMatches(f.word);
+    const action=document.querySelector('input[name="dupAction"]:checked')?.value||"merge";
+    if(matches.length&&action==="merge"){mergeIntoExisting(matches[0],f)}
+    else cards.push({...f,id:uid(),createdAt:new Date().toISOString(),fsrs:null,reviews:[],contexts:f.context?[{text:f.context,source:f.source,chapter:f.chapter,page:f.page}]:[]});
+  }
+  localStorage.setItem(KEY,JSON.stringify(cards));window.dispatchEvent(new CustomEvent("vocab-data-changed"));resetQuick();refreshAll();
+  $("lookupStatus").innerHTML='<span class="ok">✓ 保存しました。次の単語を入力してください。</span>';
+}
+$("cancelEdit").onclick=resetQuick;
+
+$("wordInput").addEventListener("keydown",e=>{
+  if(e.key==="Enter"&&!e.metaKey&&!e.ctrlKey){e.preventDefault();lookupCurrent()}
+});
+document.addEventListener("keydown",e=>{
+  if((e.metaKey||e.ctrlKey)&&e.key==="Enter"&&$("quick").classList.contains("active")){e.preventDefault();saveCurrent()}
+  if(e.altKey&&e.key.toLowerCase()==="p"){e.preventDefault();speak($("wordInput").value.trim())}
+});
+
+async function bulkLookup(){
+  const lines=$("bulkInput").value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  bulkPending=[];$("bulkSave").disabled=true;
+  if(!lines.length)return;
+  for(let i=0;i<lines.length;i++){
+    $("bulkStatus").textContent=`${i+1} / ${lines.length} を検索中…`;
+    const parts=lines[i].split("|");const word=(parts.shift()||"").trim(),context=parts.join("|").trim();
+    if(!word)continue;
+    try{
+      const data=await dictionaryData(word),cands=buildCandidates(data);
+      if(cands.length){
+        const f=candidateToFields(word,cands[0]);bulkPending.push({...f,context,status:f.needsJa?"needs-ja":"ok"});
+      }else bulkPending.push({word,context,meaning:"",definition:"",partOfSpeech:"",pronunciation:"",example:"",tags:[],memo:"",senseKey:"",status:"error"});
+    }catch(e){
+      bulkPending.push({word,context,meaning:"",definition:"",partOfSpeech:"",pronunciation:"",example:"",tags:[],memo:"",senseKey:"",status:"error",error:e.message});
+    }
+    renderBulk();
+    await new Promise(r=>setTimeout(r,120));
+  }
+  $("bulkStatus").innerHTML=`<span class="ok">${bulkPending.length}件の候補を作成しました。</span>`;
+  $("bulkSave").disabled=!bulkPending.length;
+}
+$("bulkLookup").onclick=bulkLookup;
+function renderBulk(){
+  if(!bulkPending.length){$("bulkList").innerHTML='<div class="empty">まだ候補がありません。</div>';return}
+  $("bulkList").innerHTML=bulkPending.map((f,i)=>`
+    <div class="bulkitem ${f.status==="needs-ja"?"needs-ja":""}">
+      <div class="top"><b>${esc(f.word)}</b><span>${esc(f.partOfSpeech||"")}</span></div>
+      <div class="jp">${f.meaning?esc(f.meaning):'<span class="warn">日本語訳を要確認</span>'}</div>
+      <div class="help">${esc((f.definition||f.error||"").slice(0,170))}</div>
+      ${f.context?`<div class="help">文脈: ${esc(f.context.slice(0,120))}</div>`:""}
+      <button class="btn" style="margin-top:6px" onclick="window.openBulkEdit(${i})">個別編集</button>
+    </div>`).join("");
+}
+window.openBulkEdit=i=>{
+  const f=bulkPending[i];document.querySelector('[data-tab="quick"]').click();
+  $("wordInput").value=f.word;$("contextInput").value=f.context||"";$("posInput").value=f.partOfSpeech||"";$("pronInput").value=f.pronunciation||"";
+  $("meaningInput").value=f.meaning||"";$("definitionInput").value=f.definition||"";$("exampleInput").value=f.example||"";
+  $("tagsInput").value=(f.tags||[]).join(", ");$("memoInput").value=f.memo||"";currentSenseKey=f.senseKey||"";checkDuplicate();
+};
+$("bulkSave").onclick=()=>{
+  let n=0,skipped=0;
+  for(const f of bulkPending){
+    if(!f.word||!f.meaning){skipped++;continue}
+    const full={...f,source:reading.source||"",chapter:reading.chapter||"",page:reading.page||""};learnTranslation(full);
+    const m=existingMatches(full.word);
+    if(m.length)mergeIntoExisting(m[0],full);
+    else cards.push({...full,id:uid(),createdAt:new Date().toISOString(),fsrs:null,reviews:[],contexts:full.context?[{text:full.context,source:full.source,chapter:full.chapter,page:full.page}]:[]});
+    n++;
+  }
+  localStorage.setItem(KEY,JSON.stringify(cards));window.dispatchEvent(new CustomEvent("vocab-data-changed"));bulkPending=[];renderBulk();$("bulkSave").disabled=true;$("bulkInput").value="";
+  $("bulkStatus").innerHTML=`<span class="ok">${n}件保存しました。</span>${skipped?` <span class="warn">${skipped}件は日本語訳が空のため未保存。</span>`:""}`;refreshAll();
+};
+
+function allTags(){return[...new Set(cards.flatMap(c=>parseTags(c)))].sort((a,b)=>a.localeCompare(b))}
+function allBooks(){return[...new Set(cards.map(c=>c.source).filter(Boolean))].sort((a,b)=>a.localeCompare(b))}
+function refreshFilters(){
+  const tags=allTags(),books=allBooks();
+  [["studyTag","すべて"],["filterTag","すべてのタグ"]].forEach(([id,head])=>{
+    const el=$(id),old=el.value;el.innerHTML=`<option value="">${head}</option>`+tags.map(t=>`<option>${esc(t)}</option>`).join("");if(tags.includes(old))el.value=old;
+  });
+  const b=$("filterBook"),old=b.value;b.innerHTML='<option value="">すべての本/論文</option>'+books.map(x=>`<option>${esc(x)}</option>`).join("");if(books.includes(old))b.value=old;
+}
+function refreshStats(){
+  $("statTotal").textContent=cards.length;$("statDue").textContent=cards.filter(isDue).length;$("statNew").textContent=cards.filter(isNew).length;
+  $("statMature").textContent=cards.filter(c=>(c.fsrs?.stability||0)>=21).length;
+}
+function renderList(){
+  const q=norm($("searchInput").value),tag=$("filterTag").value,book=$("filterBook").value;
+  const rows=cards.filter(c=>{
+    const hay=norm([c.word,c.meaning,c.definition,c.context,c.source,c.chapter,c.memo,parseTags(c).join(" ")].join(" "));
+    return(!q||hay.includes(q))&&(!tag||parseTags(c).includes(tag))&&(!book||c.source===book);
+  }).sort((a,b)=>a.word.localeCompare(b.word));
+  $("cardTable").innerHTML=rows.map(c=>{
+    const f=c.fsrs,fs=isNew(c)?"New":`S ${(f?.stability||0).toFixed(1)}d · D ${(f?.difficulty||0).toFixed(1)}`;
+    return`<tr>
+      <td><b>${esc(c.word)}</b><br><span class="help">${esc(c.pronunciation||"")}</span></td>
+      <td>${esc(c.meaning)}</td>
+      <td>${esc(sourceLabel(c))}${c.context?`<br><span class="help">${esc(c.context.slice(0,100))}</span>`:""}</td>
+      <td>${esc(fs)}</td><td>${isNew(c)?"今すぐ":fmtDue(f?.due)}</td>
+      <td><button class="btn" onclick="window.editCard('${c.id}')">編集</button> <button class="btn bad" onclick="window.deleteCard('${c.id}')">削除</button></td>
+    </tr>`;
+  }).join("");$("listEmpty").style.display=rows.length?"none":"block";
+}
+$("searchInput").oninput=renderList;$("filterTag").onchange=renderList;$("filterBook").onchange=renderList;
+window.editCard=id=>{
+  const c=cards.find(x=>x.id===id);if(!c)return;document.querySelector('[data-tab="quick"]').click();
+  $("editId").value=c.id;$("wordInput").value=c.word;$("contextInput").value=c.context||"";$("posInput").value=c.partOfSpeech||"";
+  $("pronInput").value=c.pronunciation||"";$("meaningInput").value=c.meaning||"";$("definitionInput").value=c.definition||"";
+  $("exampleInput").value=c.example||"";$("tagsInput").value=parseTags(c).join(", ");$("memoInput").value=c.memo||"";
+  $("pageInput").value=c.page||"";currentSenseKey=c.senseKey||"";$("cancelEdit").style.display="inline-block";checkDuplicate();scrollTo({top:0,behavior:"smooth"});
+};
+window.deleteCard=id=>{if(confirm("このカードを削除しますか？")){cards=cards.filter(c=>c.id!==id);saveCards()}};
+
+$("studyMode").onchange=buildQueue;$("studyTag").onchange=buildQueue;
+function buildQueue(){
+  const mode=$("studyMode").value,tag=$("studyTag").value;
+  queue=cards.filter(c=>{
+    if(tag&&!parseTags(c).includes(tag))return false;
+    if(mode==="new")return isNew(c);if(mode==="dueOnly")return !isNew(c)&&isDue(c);if(mode==="all")return true;return isDue(c);
+  }).sort((a,b)=>dueTime(a)-dueTime(b));qIndex=0;showCard();
+}
+function promptFor(c){
+  let mode=settings.promptMode||"cloze";if(mode==="mixed")mode=Math.random()<.5?"cloze":"word";
+  if(mode==="cloze"&&c.context){
+    const text=clozeText(c.context,c.word);
+    return{text,meta:sourceLabel(c),isCloze:true};
+  }
+  return{text:c.word,meta:[c.partOfSpeech,sourceLabel(c)].filter(Boolean).join(" · "),isCloze:false};
+}
+function showCard(){
+  $("flashCard").classList.remove("flipped");const total=queue.length;
+  $("studyCounter").textContent=total?`${Math.min(qIndex+1,total)} / ${total}`:"0 / 0";
+  $("studyProgress").style.width=total?`${Math.min(100,qIndex/total*100)}%`:"0%";
+  if(!total||qIndex>=total){
+    $("studyArea").style.display="none";$("studyEmpty").style.display="block";$("studyEmpty").textContent=total?"今回の復習は完了です！":"対象カードがありません。";
+    if(total)$("studyProgress").style.width="100%";refreshStats();return;
+  }
+  $("studyArea").style.display="block";$("studyEmpty").style.display="none";
+  const c=queue[qIndex],f=c.fsrs,p=promptFor(c);
+  $("cardPrompt").innerHTML=p.isCloze?esc(p.text).replace("_____","<span class='blank'>_____</span>"): `<span class="word">${esc(p.text)}</span>`;
+  $("cardPromptMeta").textContent=p.meta;$("cardWord").textContent=c.word;$("cardPos").textContent=[c.partOfSpeech,c.pronunciation].filter(Boolean).join(" · ");
+  $("cardMeaning").textContent=c.meaning;$("cardDefinition").textContent=c.definition||"";$("cardContext").textContent=c.context||"";
+  $("cardContext").style.display=c.context?"block":"none";$("cardExample").textContent=c.example||"";$("cardMemo").textContent=c.memo||"";
+  $("cardMemo").style.display=c.memo?"block":"none";$("cardTags").innerHTML=parseTags(c).map(t=>`<span class="badge">${esc(t)}</span>`).join("");
+  $("cardMemory").textContent=isNew(c)?"New card":`Stability ${(f.stability||0).toFixed(1)}日 · Difficulty ${(f.difficulty||0).toFixed(1)}`;
+  $("cardDue").textContent=isNew(c)?"":`Due ${fmtDue(f.due)}`;previewIntervals(c);
+}
+function previewIntervals(c){
+  if(!scheduler){["ivAgain","ivHard","ivGood","ivEasy"].forEach(id=>$(id).textContent="FSRS待機");return}
+  try{
+    const now=new Date(),p=scheduler.repeat(hydrateFSRS(c.fsrs),now);
+    [["ivAgain",1],["ivHard",2],["ivGood",3],["ivEasy",4]].forEach(([id,r])=>$(id).textContent=humanInterval(new Date(p[r].card.due)-now));
+  }catch(e){console.error(e)}
+}
+$("flashCard").onclick=()=>$("flashCard").classList.toggle("flipped");
+$("speakStudy").onclick=e=>{e.stopPropagation();if(queue[qIndex])speak(queue[qIndex].word)};
+document.querySelectorAll("[data-rating]").forEach(b=>b.onclick=()=>{
+  if(!scheduler||qIndex>=queue.length)return;
+  const rating=Number(b.dataset.rating),c=queue[qIndex],i=cards.findIndex(x=>x.id===c.id),now=new Date();
+  try{
+    const result=scheduler.next(hydrateFSRS(cards[i].fsrs),now,rating);
+    cards[i].fsrs=serializeFSRS(result.card);cards[i].reviews=cards[i].reviews||[];
+    cards[i].reviews.push({rating,review:now.toISOString(),due:new Date(result.log.due).toISOString(),elapsed_days:result.log.elapsed_days,scheduled_days:result.log.scheduled_days,state:result.log.state});
+    localStorage.setItem(KEY,JSON.stringify(cards));window.dispatchEvent(new CustomEvent("vocab-data-changed"));qIndex++;showCard();refreshStats();renderList();
+  }catch(e){alert("FSRS更新に失敗しました: "+e.message)}
+});
+
+$("retentionRange").value=Math.round(settings.retention*100);$("retentionValue").textContent=Math.round(settings.retention*100)+"%";
+$("promptMode").value=settings.promptMode||"cloze";
+$("retentionRange").oninput=e=>{settings.retention=Number(e.target.value)/100;$("retentionValue").textContent=e.target.value+"%";persistSettings();resetScheduler();showCard()};
+$("promptMode").onchange=e=>{settings.promptMode=e.target.value;persistSettings();showCard()};
+
+$("exportJson").onclick=()=>download(new Blob([JSON.stringify({version:4,settings,reading,personalDict,cards},null,2)],{type:"application/json"}),"my_vocabulary_v4_backup.json");
+$("importJson").onchange=async e=>{
+  const file=e.target.files[0];if(!file)return;
+  try{
+    const d=JSON.parse(await file.text()),incoming=Array.isArray(d)?d:(Array.isArray(d.cards)?d.cards:null);
+    if(!incoming)throw new Error("カード配列がありません");
+    if(confirm(`${incoming.length}件を現在のデータへ追加しますか？`)){cards.push(...incoming);if(d.personalDict)personalDict={...personalDict,...d.personalDict};persistPersonal();saveCards()}
+  }catch(err){alert("読み込みエラー: "+err.message)}e.target.value="";
+};
+$("exportCsv").onclick=()=>{
+  const cq=v=>`"${String(v??"").replaceAll('"','""')}"`;
+  const H=["word","partOfSpeech","pronunciation","meaning","definition","context","example","source","chapter","page","tags","memo","due","stability","difficulty"];
+  const lines=[H.join(","),...cards.map(c=>[c.word,c.partOfSpeech,c.pronunciation,c.meaning,c.definition,c.context,c.example,c.source,c.chapter,c.page,parseTags(c).join("; "),c.memo,c.fsrs?.due||"",c.fsrs?.stability||"",c.fsrs?.difficulty||""].map(cq).join(","))];
+  download(new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv"}),"my_vocabulary_v4.csv");
+};
+$("importV3").onclick=()=>{
+  const v3=safeParse(localStorage.getItem("myVocabularyCards_v3"),[]);
+  if(!v3.length)return alert("このブラウザ領域にはv3データが見つかりません。v3のJSONバックアップからも移行できます。");
+  if(confirm(`${v3.length}件のv3カードを追加しますか？`)){
+    cards.push(...v3.map(c=>({...c,id:uid(),context:c.context||"",chapter:c.chapter||"",contexts:c.context?[{text:c.context,source:c.source||"",chapter:c.chapter||"",page:c.page||""}]:[]})));saveCards();
+  }
+};
+$("deleteAll").onclick=()=>{if(confirm("全カードを削除します。元に戻せません。")){cards=[];saveCards()}};
+$("clearPersonalDict").onclick=()=>{if(confirm("自分用和訳辞書を消去しますか？カード自体は残ります。")){personalDict={};persistPersonal()}};
+
+function refreshAll(){refreshFilters();refreshStats();renderList();buildQueue();persistPersonal()}
+
+/* Bridge used by optional cloud-sync.js. Keeping cloud code separate means
+   the app still works fully offline/local when Supabase is not configured. */
+window.VocabApp = {
+  exportState(){
+    return {
+      version:5,
+      cards: JSON.parse(JSON.stringify(cards)),
+      settings: JSON.parse(JSON.stringify(settings)),
+      reading: JSON.parse(JSON.stringify(reading)),
+      personalDict: JSON.parse(JSON.stringify(personalDict))
+    };
+  },
+  importState(state){
+    if(!state || !Array.isArray(state.cards)) throw new Error("Invalid cloud state");
+    cards = state.cards || [];
+    settings = state.settings || settings;
+    reading = state.reading || reading;
+    personalDict = state.personalDict || personalDict;
+
+    localStorage.setItem(KEY, JSON.stringify(cards));
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+    localStorage.setItem(READING_KEY, JSON.stringify(reading));
+    localStorage.setItem(PERSONAL_DICT_KEY, JSON.stringify(personalDict));
+
+    $("readingSource").value=reading.source||"";
+    $("readingChapter").value=reading.chapter||"";
+    $("readingPage").value=reading.page||"";
+    $("retentionRange").value=Math.round((settings.retention||.90)*100);
+    $("retentionValue").textContent=Math.round((settings.retention||.90)*100)+"%";
+    $("promptMode").value=settings.promptMode||"cloze";
+    resetScheduler();
+    refreshAll();
+  },
+  notify(message, type="ok"){
+    const el=$("lookupStatus");
+    if(el) el.innerHTML=`<span class="${type}">${esc(message)}</span>`;
+  }
+};
+
+refreshAll();initFSRS();
+
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredInstall=e;$("installBtn").style.display="inline-block"});
+$("installBtn").onclick=async()=>{if(!deferredInstall)return;deferredInstall.prompt();await deferredInstall.userChoice;deferredInstall=null;$("installBtn").style.display="none"};
+
+if("serviceWorker" in navigator && location.protocol!=="file:"){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js").catch(console.error));
+}
+
+(function handleShare(){
+  const p=new URLSearchParams(location.search);
+  if(!p.has("shared")&&!p.has("text")&&!p.has("title"))return;
+  const text=(p.get("text")||"").trim(),title=(p.get("title")||"").trim(),url=(p.get("url")||"").trim();
+  if(text && text.length<=60 && !/[.!?。！？]/.test(text) && text.split(/\s+/).length<=5)$("wordInput").value=text;
+  else $("contextInput").value=[text,url].filter(Boolean).join("\n");
+  if(title&&!$("readingSource").value){$("readingSource").value=title;persistReading()}
+  checkDuplicate();history.replaceState({},document.title,location.pathname);
+})();
+</script>
+<script type="module" src="./cloud-sync.js"></script>
+</body>
+</html>
