@@ -11,8 +11,34 @@ self.addEventListener("install",event=>{
     await self.skipWaiting();
   })());
 });
-self.addEventListener("activate",event=>{
-  event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE && k!==OFFLINE_CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));
+self.addEventListener("fetch", event => {
+  if (event.request.method !== "GET") return;
+
+  const url = new URL(event.request.url);
+
+  // Important configuration/code files:
+  // online → always get latest version
+  // offline → fall back to cache
+  if (
+    url.pathname.endsWith("/config.js") ||
+    url.pathname.endsWith("/cloud-sync.js") ||
+    url.pathname.endsWith("/index.html")
+  ) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          const copy = response.clone();
+          caches.open(CACHE).then(cache => {
+            cache.put(event.request, copy);
+          });
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
+  // 以下は既存処理
 });
 self.addEventListener("fetch",event=>{
   if(event.request.method!=="GET")return;
