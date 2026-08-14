@@ -7,3 +7,4 @@
 // Invite-only v5.1 has NO local-only bypass. Until configured, the app stays locked.
 export const SUPABASE_URL = "https://flgottnfccznstiykgxi.supabase.co";
 export const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_zGt2jj3bEaUQEPqpEsD7hQ_sYlF8hDI";
+
